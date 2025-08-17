@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>অনলাইন কুইজ</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; }
+    .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #333; }
+    .question { margin-bottom: 15px; }
+    button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #45a049; }
+    #result { margin-top: 20px; font-weight: bold; }
+    #timer { font-weight: bold; color: red; text-align: center; margin-bottom: 20px; }
+    .admin-section { margin-top: 30px; border-top: 2px solid #ccc; padding-top: 20px; }
+    input, textarea { width: 100%; padding: 5px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>অনলাইন কুইজ</h1>
+    <div id="timer">সময় বাকি: 30 সেকেন্ড</div>
+    <form id="quizForm"></form>
+    <button type="button" onclick="checkAnswers()">Submit</button>
+    <div id="result"></div>
+
+    <!-- 🔑 Admin Panel -->
+    <div class="admin-section">
+      <h2>অ্যাডমিন লগইন</h2>
+      <input type="password" id="adminPass" placeholder="অ্যাডমিন পাসওয়ার্ড দিন">
+      <button onclick="loginAdmin()">লগইন</button>
+
+      <div id="adminPanel" style="display:none;">
+        <h3>নতুন প্রশ্ন যোগ করুন</h3>
+        <textarea id="newQuestion" placeholder="প্রশ্ন লিখুন"></textarea>
+        <input type="text" id="opt1" placeholder="অপশন ১">
+        <input type="text" id="opt2" placeholder="অপশন ২">
+        <input type="text" id="opt3" placeholder="অপশন ৩">
+        <input type="text" id="answer" placeholder="সঠিক উত্তর লিখুন">
+        <button onclick="addQuestion()">প্রশ্ন যোগ করুন</button>
+
+        <h3>সময় সেট করুন</h3>
+        <input type="number" id="setTime" placeholder="সেকেন্ড লিখুন (যেমন 60 = 1 মিনিট)">
+        <button onclick="updateTime()">সময় পরিবর্তন করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let timeLeft = 30;
+    let timer;
+
+    let questions = [
+      { q: "বাংলাদেশের রাজধানী কোনটি?", options: ["ঢাকা", "চট্টগ্রাম", "রাজশাহী"], answer: "ঢাকা" },
+      { q: "কম্পিউটারের জনক কে?", options: ["চার্লস ব্যাবেজ", "আইনস্টাইন", "নিউটন"], answer: "চার্লস ব্যাবেজ" },
+      { q: "HTML এর পূর্ণরূপ কী?", options: ["HyperText Markup Language", "HighText Machine Language", "Home Tool Markup Language"], answer: "HyperText Markup Language" }
+    ];
+
+    function startTimer() {
+      clearInterval(timer);
+      timer = setInterval(function() {
+        if(timeLeft <= 0){
+          clearInterval(timer);
+          checkAnswers();
+          document.getElementById("timer").innerText = "সময় শেষ!";
+        } else {
+          document.getElementById("timer").innerText = "সময় বাকি: " + timeLeft + " সেকেন্ড";
+        }
+        timeLeft -= 1;
+      }, 1000);
+    }
+
+    function loadQuestions() {
+      let form = document.getElementById("quizForm");
+      form.innerHTML = "";
+      questions.forEach((item, index) => {
+        let div = document.createElement("div");
+        div.classList.add("question");
+        div.innerHTML = `<p>${index+1}) ${item.q}</p>` +
+          item.options.map(opt => `<input type="radio" name="q${index}" value="${opt}"> ${opt}<br>`).join("");
+        form.appendChild(div);
+      });
+    }
+
+    function checkAnswers() {
+      let score = 0;
+      questions.forEach((item, index) => {
+        let selected = document.querySelector(`input[name="q${index}"]:checked`);
+        if (selected && selected.value === item.answer) {
+          score++;
+        }
+      });
+      document.getElementById("result").innerText = "আপনার স্কোর: " + score + "/" + questions.length;
+    }
+
+    function loginAdmin() {
+      let pass = document.getElementById("adminPass").value;
+      if(pass === "admin123"){
+        document.getElementById("adminPanel").style.display = "block";
+      } else {
+        alert("ভুল পাসওয়ার্ড!");
+      }
+    }
+
+    function addQuestion() {
+      let q = document.getElementById("newQuestion").value;
+      let opt1 = document.getElementById("opt1").value;
+      let opt2 = document.getElementById("opt2").value;
+      let opt3 = document.getElementById("opt3").value;
+      let ans = document.getElementById("answer").value;
+
+      if(q && opt1 && opt2 && opt3 && ans){
+        questions.push({ q: q, options: [opt1, opt2, opt3], answer: ans });
+        loadQuestions();
+        alert("নতুন প্রশ্ন যোগ হয়েছে!");
+      } else {
+        alert("সব ফিল্ড পূরণ করুন!");
+      }
+    }
+
+    function updateTime() {
+      let newTime = document.getElementById("setTime").value;
+      if(newTime > 0){
+        timeLeft = parseInt(newTime);
+        startTimer();
+        alert("সময় পরিবর্তন হয়েছে: " + newTime + " সেকেন্ড");
+      } else {
+        alert("সঠিক সময় লিখুন!");
+      }
+    }
+
+    loadQuestions();
+    startTimer();
+  </script>
+</body>
+</html>
